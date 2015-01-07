@@ -62,7 +62,7 @@ var Hint = React.createClass({
       text = "Need a hint?"
     }
     return (
-      <div id="hint" onMouseEnter={this.startHint} onMouseLeave={this.endHint}>{text}</div>
+      <div id="hint" onMouseDown={this.startHint} onTouchStart={this.startHint}>{text}</div>
     );
   },
   startHint: function() {
@@ -83,7 +83,7 @@ var Game = React.createClass({
     change[pos] = {$set: val};
 
     var newPlays = update(this.state.plays, change);
-    this.setState({plays: newPlays});
+    this.setState({plays: newPlays, hintEnabled: false});
   },
 
   handleChange: function(event) {
@@ -121,9 +121,10 @@ var Game = React.createClass({
         var hinted = this.state.hintEnabled && isHinted(hint, rowName, colName, boxName(r, c), posName);
 
         if (vals[pos] > 0) {
-          content = <input type="text" value={val} disabled />;
+          /* content = <input type="number" value={val} disabled />; */
+          content = val;
         } else {
-          content = <input type="text" value={plays[pos]} onChange={this.handleChange} data-pos={pos}/>;
+          content = <input type="number" pattern="[0-9]*" value={plays[pos]} onChange={this.handleChange} data-pos={pos}/>;
         }
 
         var classes = [colName, hinted ? "hinted" : ""].join(" ");
