@@ -1,6 +1,8 @@
 var game;
 var update = React.addons.update;
 
+React.initializeTouchEvents(true);
+
 function fixVal(val) {
   val = val.replace(/[^1-9]/g, '');
   if (val > 9)
@@ -73,9 +75,28 @@ var Hint = React.createClass({
   }
 });
 
+var ValueSelect = React.createClass({
+  handleClick: function(event) {
+    var value = $(event.target).data("value");
+    if (value == "Clear") value = '';
+    sendPlayEvent(this.props.selectedPos, value);
+  },
+
+  render: function() {
+    if (this.props.selectedPos >= 0) {
+      var buttons = [1,2,3,4,5,6,7,8,9,"Clear"].map(function(n) {
+        return <button key={n} onClick={this.handleClick} data-value={n}>{n}</button>;
+      }.bind(this));
+      return <div className="value_select">{buttons}</div>;
+    } else {
+      return <div className="value_select"></div>;
+    }
+  }
+});
+
 var Game = React.createClass({
   getInitialState: function() {
-    return { plays: [], hintEnabled: false };
+    return { plays: [], hintEnabled: false, selectedPos: -1 };
   },
 
   play: function(pos, val) {
@@ -83,13 +104,7 @@ var Game = React.createClass({
     change[pos] = {$set: val};
 
     var newPlays = update(this.state.plays, change);
-    this.setState({plays: newPlays, hintEnabled: false});
-  },
-
-  handleChange: function(event) {
-    var target = $(event.target);
-    var val = fixVal(target.val());
-    sendPlayEvent(target.data("pos"), val);
+    this.setState({plays: newPlays, hintEnabled: false, selectedPos: -1});
   },
 
   componentWillMount: function() {
@@ -104,11 +119,17 @@ var Game = React.createClass({
     this.setState({hintEnabled: false});
   },
 
+  setSelected: function() {
+    var target = $(event.target);
+    this.setState({selectedPos: target.data("pos")});
+  },
+
   render: function() {
     var vals = this.props.board;
     var plays = this.state.plays;
 
     var hint = this.state.hintEnabled && calculateHint(vals, plays);
+    var selectedPos = this.state.selectedPos;
 
     var rows = [1,2,3,4,5,6,7,8,9].map(function(r) {
       var rowName = "r" + r;
@@ -119,19 +140,30 @@ var Game = React.createClass({
         var val = vals[pos];
         var content;
         var hinted = this.state.hintEnabled && isHinted(hint, rowName, colName, boxName(r, c), posName);
+        var selected = (pos == selectedPos);
+        var given = (vals[pos] > 0);
+        var selectable = !given;
 
-        if (vals[pos] > 0) {
-          /* content = <input type="number" value={val} disabled />; */
+        if (given) {
           content = val;
         } else {
-          content = <input type="number" pattern="[0-9]*" value={plays[pos]} onChange={this.handleChange} data-pos={pos}/>;
+          content = plays[pos];
         }
 
-        var classes = [colName, hinted ? "hinted" : ""].join(" ");
+        var classes = [colName, hinted ? "hinted" : "", selected ? "selected" : "", given ? "given" : ""].join(" ");
 
+        var tdProps = {
+          key: pos,
+          className: classes,
+          "data-pos": pos
+        }
+        if (selectable) {
+          tdProps.onMouseDown = this.setSelected;
+          tdProps.onTouchStart = this.setSelected;
+        }
         return (
-          <td key={pos} className={classes}>
-          {content}
+          <td {...tdProps}>
+            {content}
           </td>
         );
       }.bind(this));
@@ -142,6 +174,7 @@ var Game = React.createClass({
       <div>
         <Hint hint={hint} />
         <table>{rows}</table>
+        <ValueSelect selectedPos={this.state.selectedPos} />
       </div>
     );
   }
