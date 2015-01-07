@@ -1,4 +1,10 @@
+body
+  font-family: Arial, Helvetica, sans-serif
+
 #game
+  #hint
+    margin-bottom: 1em
+
   table
     border-collapse: collapse
     input
@@ -12,6 +18,7 @@
       font: normal 20px Arial
       color: #00f
       outline: none
+      background: transparent
       &:disabled
         color: #000
 
@@ -19,6 +26,9 @@
       width: 40px
       height: 40px
       border: 1px solid #333
+
+      &.hinted
+        background: #ff8
 
     .r1, .r4, .r7
       td
