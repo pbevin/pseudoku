@@ -80,6 +80,7 @@
         singles[row[i][0]] = 1;
       }
     }
+    // dumpRow(row);
     return row.map(function(choices) {
       if (choices.length == 1)
         return choices;
@@ -105,7 +106,7 @@
       var k;
       for (k = 1; k <= 9; k++) {
         var places = row.filter(function(choices) {
-          return choices.length > 1 && choices.includes(k);
+          return choices && choices.includes(k);
         });
 
         if (places.length == 1) {
@@ -120,14 +121,26 @@
     var cells = asGrid(merged.map(choices));
 
     cells = prune(cells, rows);
+    // console.log(longstr(cells));
     cells = prune(cells, cols);
+    // console.log(longstr(cells));
     cells = prune(cells, boxs);
+    // console.log(longstr(cells));
+
+    var i, j;
+    for (i = 0; i < 9; i++) {
+      for (j = 0; j < 9; j++) {
+        if (merged[9*i+j])
+          cells[i][j] = null;
+      }
+    }
 
     var hints = []
     findHints(cells, rows, "r", hints);
     findHints(cells, cols, "c", hints);
     findHints(cells, boxs, "b", hints);
 
+    // console.log(hints.map(function(a) { return a.join("="); }));
     var numUsed = merged.filter(function(val) { return val > 0; }).length;
 
     return hints[(numUsed * 2677) % hints.length];
@@ -142,10 +155,38 @@
         }
         s += ",";
       }
-      s += "/";
+      s += "\n";
     }
     return s;
   }
+
+  function dumpRow(rowOfChoices) {
+    console.log("dumprow ",
+      rowOfChoices.map(function(choices) {
+        return choices.join("");
+      }).join(", ")
+    );
+  }
+
+  function test() {
+    var cells = [];
+    var i;
+    for (i = 0; i < 81; i++) {
+      cells.push(i);
+    }
+    var grid = asGrid(cells);
+    printGrid(grid);
+    grid = boxs(grid);
+    printGrid(grid);
+  }
+
+  function printGrid(grid) {
+    var i;
+    for (i = 0; i < 9; i++) {
+      console.log(grid[i].join(" "));
+    }
+  }
+  // test();
 
   window.Pseudoku = {
     hint: hint
